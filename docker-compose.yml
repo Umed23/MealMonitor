@@ -7,7 +7,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: mealmontor_main
     ports:
-      - "3307:3306"  # Changed to 3307 to avoid conflict with local MySQL
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init-scripts:/docker-entrypoint-initdb.d
@@ -22,7 +22,7 @@ services:
 
   # Eureka Server
   eureka-server:
-    build: ./MealMonitor-EurekaServer
+    image: purvakamerkarjj5499079/mealmonitor-eureka-server:latest
     container_name: mealmontor-eureka-server
     ports:
       - "8761:8761"
@@ -43,7 +43,7 @@ services:
 
   # API Gateway
   gateway:
-    build: ./MealMonitor-Gateway
+    image: purvakamerkarjj5499079/mealmonitor-gateway:latest
     container_name: mealmontor-gateway
     ports:
       - "8080:8080"
@@ -67,7 +67,7 @@ services:
 
   # User Service
   user-service:
-    build: ./MealMonitor-UserService
+    image: purvakamerkarjj5499079/mealmonitor-user-service:latest
     container_name: mealmontor-user-service
     ports:
       - "8084:8084"
@@ -78,7 +78,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       mysql:
@@ -87,17 +86,13 @@ services:
         condition: service_healthy
       zipkin:
         condition: service_started
+    restart: always
     networks:
       - mealmontor-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   # Canteen Service
   canteen-service:
-    build: ./MealMonitor-CanteenService
+    image: purvakamerkarjj5499079/mealmonitor-canteen-service:latest
     container_name: mealmontor-canteen-service
     ports:
       - "8086:8086"
@@ -108,7 +103,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       mysql:
@@ -119,15 +113,10 @@ services:
         condition: service_started
     networks:
       - mealmontor-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   # Review Service
   review-service:
-    build: ./MealMonitor-ReviewService
+    image: purvakamerkarjj5499079/mealmonitor-review-service:latest
     container_name: mealmontor-review-service
     ports:
       - "8082:8082"
@@ -138,7 +127,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       mysql:
@@ -149,15 +137,10 @@ services:
         condition: service_started
     networks:
       - mealmontor-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   # Notification Service
   notification-service:
-    build: ./MealMonitor-NotificationService
+    image: purvakamerkarjj5499079/mealmonitor-notification-service:latest
     container_name: mealmontor-notification-service
     ports:
       - "8089:8089"
@@ -168,7 +151,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       mysql:
@@ -179,15 +161,10 @@ services:
         condition: service_started
     networks:
       - mealmontor-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8089/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   # Poll Service
   poll-service:
-    build: ./MealMonitor-PollService
+    image: purvakamerkarjj5499079/mealmonitor-poll-service:latest
     container_name: mealmontor-poll-service
     ports:
       - "8087:8087"
@@ -198,7 +175,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=password
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     depends_on:
       mysql:
@@ -209,70 +185,10 @@ services:
         condition: service_started
     networks:
       - mealmontor-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8087/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-
-  # Web App (Spring Boot)
-#  web-app:
-#    build: ./MealMonitor-WebApp
-#    container_name: mealmontor-web-app
-#    ports:
-#      - "8085:8085"
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#      - SERVER_PORT=8085
-#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-#      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-#      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-#    depends_on:
-#      eureka-server:
-#        condition: service_healthy
-#      zipkin:
-#        condition: service_started
-#    networks:
-#      - mealmontor-network
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 5
-
-  # Moderation Service
-#  moderation-service:
-#    build: ./MealMonitor-ModerationService
-#    container_name: mealmontor-moderation-service
-#    ports:
-#      - "8088:8088"
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#      - SERVER_PORT=8088
-#      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/mealmontor_moderation
-#      - SPRING_DATASOURCE_USERNAME=root
-#      - SPRING_DATASOURCE_PASSWORD=password
-#      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-#      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-#      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-#    depends_on:
-#      mysql:
-#        condition: service_healthy
-#      eureka-server:
-#        condition: service_healthy
-#      zipkin:
-#        condition: service_started
-#    networks:
-#      - mealmontor-network
-#    healthcheck:
-#      test: ["CMD", "curl", "-f", "http://localhost:8088/actuator/health"]
-#      interval: 30s
-#      timeout: 10s
-#      retries: 5
 
   # React Frontend
   frontend:
-    build: ./mealmontor-frontend
+    image: purvakamerkarjj5499079/mealmonitor-frontend:latest
     container_name: mealmontor-frontend
     ports:
       - "3000:80"
@@ -282,7 +198,7 @@ services:
     networks:
       - mealmontor-network
 
-  # Zipkin - Distributed Tracing
+  # Zipkin
   zipkin:
     image: openzipkin/zipkin:latest
     container_name: mealmontor-zipkin
@@ -293,7 +209,7 @@ services:
     networks:
       - mealmontor-network
 
-  # Prometheus - Metrics Collection
+  # Prometheus
   prometheus:
     image: prom/prometheus:latest
     container_name: mealmontor-prometheus
@@ -302,18 +218,12 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
     networks:
       - mealmontor-network
     depends_on:
       - eureka-server
 
-  # Grafana - Monitoring Dashboard
+  # Grafana
   grafana:
     image: grafana/grafana:latest
     container_name: mealmontor-grafana
@@ -322,7 +232,6 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
@@ -331,7 +240,6 @@ services:
       - mealmontor-network
     depends_on:
       - prometheus
-
 
 volumes:
   mysql_data:
